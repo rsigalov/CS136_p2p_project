@@ -106,7 +106,8 @@ class AbxyStd(Peer):
         # the previous round.
         if round >= 2:
             print "Previous round downloads"
-            print history.downloads[round-1] 
+            if len(history.downloads[round-1]) > 0:
+                print (history.downloads[round-1])[0]
 
         if len(requests) == 0:
             logging.debug("No one wants my pieces!")
