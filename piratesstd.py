@@ -13,7 +13,7 @@ from messages import Upload, Request
 from util import even_split
 from peer import Peer
 
-class AbxyStd(Peer):
+class PiratesStd(Peer):
     def post_init(self):
         print "post_init(): %s here!" % self.id
         self.dummy_state = dict()
@@ -145,9 +145,6 @@ class AbxyStd(Peer):
                     chosen.append(peer_id)
                 #if len(request_bwd_history) == 0:
                 #    chosen.append(random.choice(request_bwd_history.keys()))
-
-
-
 
 ################################################################
 
