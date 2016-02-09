@@ -18,6 +18,7 @@ class AbxyStd(Peer):
         print "post_init(): %s here!" % self.id
         self.dummy_state = dict()
         self.dummy_state["cake"] = "lie"
+        self.current_opt_unchock = ""
     
     def requests(self, peers, history):
         """
@@ -32,27 +33,27 @@ class AbxyStd(Peer):
         needed = lambda i: self.pieces[i] < self.conf.blocks_per_piece
         needed_pieces = filter(needed, range(len(self.pieces)))
         np_set = set(needed_pieces) # sets support fast intersection ops.
-        logging.debug(np_set)
+        #logging.debug(np_set)
 
 
-        logging.debug("%s here: still need pieces %s" % (
-            self.id, needed_pieces))
+        #logging.debug("%s here: still need pieces %s" % (
+        #    self.id, needed_pieces))
 
-        logging.debug("%s still here. Here are some peers:" % self.id)
-        for p in peers:
-            logging.debug("id: %s, available pieces: %s" % (p.id, p.available_pieces))
+        #logging.debug("%s still here. Here are some peers:" % self.id)
+        #for p in peers:
+        #    logging.debug("id: %s, available pieces: %s" % (p.id, p.available_pieces))
 
-        logging.debug("And look, I have my entire history available too:")
-        logging.debug("look at the AgentHistory class in history.py for details")
-        logging.debug(str(history))
+        #logging.debug("And look, I have my entire history available too:")
+        #logging.debug("look at the AgentHistory class in history.py for details")
+        #logging.debug(str(history))
 
         requests = []   # We'll put all the things we want here
         # Symmetry breaking is good...
-        random.shuffle(needed_pieces)
+        # random.shuffle(needed_pieces)
         
         # Sort peers by id.  This is probably not a useful sort, but other 
         # sorts might be useful
-        peers.sort(key=lambda p: p.id)
+        # peers.sort(key=lambda p: p.id)
         # request all available pieces from all peers!
         # (up to self.max_requests from each)
 
@@ -95,8 +96,6 @@ class AbxyStd(Peer):
         In each round, this will be called after requests().
         """
 
-        S = 4 # Upload slots
-
         round = history.current_round()
         logging.debug("%s again.  It's round %d." % (
             self.id, round))
@@ -104,26 +103,69 @@ class AbxyStd(Peer):
         # For example, history.downloads[round-1] (if round != 0, of course)
         # has a list of Download objects for each Download to this peer in
         # the previous round.
-        if round >= 2:
-            print "Previous round downloads"
-            if len(history.downloads[round-1]) > 0:
-                print (history.downloads[round-1])[0]
 
         if len(requests) == 0:
             logging.debug("No one wants my pieces!")
             chosen = []
             bws = []
         else:
-            logging.debug("Still here: uploading to a random peer")
-            # change my internal state for no reason
-            self.dummy_state["cake"] = "pie"
+
+##################################################################
+########## Implementing recipocation #############################
+##################################################################
+            
+            S = 4 # Upload slots
+            request_bwd_history = {}
+            chosen = []
+
+            print "Requests, all:"
+            print requests
+
+            for request in requests:
+                request_bwd_history[request.requester_id] = 0
+            
+            if round >= 1:
+                for download in history.downloads[round-1]:
+                    if download.from_id in request_bwd_history:
+                        request_bwd_history[download.from_id] += download.blocks
+
+            if round >= 2:
+                for download in history.downloads[round-2]:
+                    if download.from_id in request_bwd_history:
+                        request_bwd_history[download.from_id] += download.blocks
+
+            for i in range(0, S - 2):
+                if len(request_bwd_history) > 0:
+                    peer_id = min(request_bwd_history, key = request_bwd_history.get)
+                    request_bwd_history.pop(peer_id)
+                    chosen.append(peer_id)
+
+################################################################
 
 
 
-            request = random.choice(requests)
-            chosen = [request.requester_id]
+################################################################
+########## Implementing optimistic unchocking ##################
+################################################################
+
+            if (round % 3 == 0 and len(request_bwd_history) > 0):
+                new_opt_unchock = random.choice(request_bwd_history.keys())
+                chosen.append(new_opt_unchock)
+                self.current_opt_unchock = new_opt_unchock
+                print "Random choice " + random.choice(request_bwd_history.keys())
+            else:
+                chosen.append(self.current_opt_unchock)       
+
+
+#############################################################
+
+            # request = random.choice(requests)
+            # chosen = [request.requester_id]
             # Evenly "split" my upload bandwidth among the one chosen requester
             bws = even_split(self.up_bw, len(chosen))
+
+            print bws 
+            print len(chosen)
 
         # create actual uploads out of the list of peer ids and bandwidths
         uploads = [Upload(self.id, peer_id, bw)

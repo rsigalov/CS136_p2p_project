@@ -40,9 +40,9 @@ class Dummy(Peer):
         for p in peers:
             logging.debug("id: %s, available pieces: %s" % (p.id, p.available_pieces))
 
-        logging.debug("And look, I have my entire history available too:")
-        logging.debug("look at the AgentHistory class in history.py for details")
-        logging.debug(str(history))
+        #logging.debug("And look, I have my entire history available too:")
+        #logging.debug("look at the AgentHistory class in history.py for details")
+        #logging.debug(str(history))
 
         requests = []   # We'll put all the things we want here
         # Symmetry breaking is good...
