@@ -156,12 +156,17 @@ class PiratesStd(Peer):
 ########## Implementing optimistic unchocking ##################
 ################################################################
 
-            if (round % 3 == 0 and len(request_bwd_history) > 0):
-                new_opt_unchock = random.choice(request_bwd_history.keys())
-                chosen.append(new_opt_unchock)
-                self.current_opt_unchock = new_opt_unchock
+            if round % 3 == 0:
+                peers_tmp = peers
+                for peer_id in chosen:
+                    del peers_tmp[PeerInfo(id=peer_id)]
+                if len(peers_tmp) > 0:
+                    new_opt_unchoke = random.choice(peers_tmp.keys()).id
+                    chosen.append(new_opt_unchoke)
+                    self.current_opt_unchoke = new_opt_unchoke
+                    print "New optimistic unchoking" + new_opt_unchoke
             else:
-                chosen.append(self.current_opt_unchock)       
+                chosen.append(self.current_opt_unchoke)     
 
 
 #############################################################
