@@ -85,6 +85,8 @@ class PiratesStd(Peer):
                 if len(av_set) == 0:
                     break
 
+        print history
+
 
         return requests
 
