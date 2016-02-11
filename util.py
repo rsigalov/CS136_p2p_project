@@ -54,6 +54,34 @@ def median(numeric):
         upper = vals[count/2]
         return (float(lower + upper)) / 2
 
+def proportional_split(n, lst):
+    """
+    n must be an int.
+    lst is a list of integers that adds up to 100.
+    returns a list of as-proportional-as-possible shares when n is divided into shares as in the lst.
+    Excess is left for the end.
+    >>> proportional_split(10,[54,36,10])
+    [5,3,2]
+    >>> proportional_split(3,[30,60,10])
+    [0, 1,2]
+    """
+    ans = []
+    if type(n) is not int:
+        raise TypeError("n must be int")
+    lst_sum = 0
+    for i in lst:
+        lst_sum += i
+    if abs(lst_sum - 100) > 1e-5:
+        raise TypeError("lst elements must add up to 100. It's %d", lst)
+    ans = []
+    last_split = n
+    for i in lst[:-1]:
+        ith_split = (n*i)//100
+        ans.append(ith_split)
+        last_split -= ith_split
+    ans.append(last_split)
+    return ans
+
 
 
 def even_split(n, k):
@@ -117,4 +145,7 @@ class IllegalUpload(Exception):
 
 class IllegalRequest(Exception):
     pass
+
+
+
 
