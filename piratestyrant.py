@@ -97,6 +97,7 @@ class PiratesTyrant(Peer):
         alpha = 0.2
         gamma = 0.1
         round = history.current_round()
+        self.bandwidthHistory.append(self.up_bw)
 
         if round == 0:
             for peer in peers:
@@ -185,35 +186,48 @@ class PiratesTyrant(Peer):
                 downloadUploadRatio_tmp[request.requester_id] = self.downloadUploadRatio[request.requester_id]
                 print self.downloadUploadRatio[request.requester_id]
 
-            while sumUpload <= len(peers):
+            while (sumUpload <= len(peers) and len(downloadUploadRatio_tmp) > 0):
                 peer_id = max(downloadUploadRatio_tmp, key = downloadUploadRatio_tmp.get)
-                #chosen[peer_id] = downloadUploadRatio_tmp.pop(peer_id)
+                chosen[peer_id] = downloadUploadRatio_tmp.pop(peer_id)
                 sumUpload += self.uploadRate[peer_id]
                 # print "sumUpload of %s" % (peer_id)
                 # print sumUpload
                 # print downloadUploadRatio_tmp[peer_id]
                 # print self.uploadRate[peer_id]
 
+            """ Calculate the total proportional BW allocated to other peers """
             totalUploadBW = 0
             for choice in chosen:
                 totalUploadBW += chosen[choice]
-                print chosen[choice]
+                # print chosen[choice]
 
+            """ Make each BW as a proportion of totalUploadBW """
             for choice in chosen:
-                chosen[choice] = chosen[choice] * self.up_bw / totalUploadBW
+                chosen[choice] = 100 * float(chosen[choice]) / float(totalUploadBW)
 
+            # print "Vector of choices for this round:"
+            # print chosen
 
+            """ Now need to divide our BW as integers according to chosen vector """
+            peerWeights = [value for (key, value) in sorted(chosen.items())]
+            peerNames = sorted(chosen)
 
-            request = random.choice(requests)
-            chosen = [request.requester_id]
+            # print "original chosen: %s" % (chosen)
+            # print "names: %s" % (peerNames)
+            # print "weights: %s" % (peerWeights)
+
+            # request = random.choice(requests)
+            # chosen = [request.requester_id]
             # Evenly "split" my upload bandwidth among the one chosen requester
-            bws = even_split(self.up_bw, len(chosen))
+            # bws = even_split(self.up_bw, len(chosen))
+
+            bws = proportional_split(self.up_bw, peerWeights)
 
             # create actual uploads out of the list of peer ids and bandwidths
             uploads = [Upload(self.id, peer_id, bw)
                 for (peer_id, bw) in zip(chosen, bws)]
 
-            self.bandwidthHistory.append(self.up_bw)
+            
         
 
 
