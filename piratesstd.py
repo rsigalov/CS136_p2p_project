@@ -18,7 +18,7 @@ class PiratesStd(Peer):
         print "post_init(): %s here!" % self.id
         self.dummy_state = dict()
         self.dummy_state["cake"] = "lie"
-        self.current_opt_unchock = ""
+        self.current_opt_unchoke = ""
     
     def requests(self, peers, history):
         """
@@ -73,7 +73,7 @@ class PiratesStd(Peer):
             isect = av_set.intersection(np_set)
             n = min(self.max_requests, len(isect))
 
-            """    if piece_id in av_set:"""
+            """  if piece_id in av_set:"""
             while n > 0:
                 piece_id = min(av_dict_tmp, key = av_dict.get)
                 av_dict_tmp.pop(piece_id)
@@ -84,9 +84,6 @@ class PiratesStd(Peer):
                     n -= 1
                 if len(av_set) == 0:
                     break
-
-        print history
-
 
         return requests
 
@@ -119,7 +116,7 @@ class PiratesStd(Peer):
 ##################################################################
 ########## Implementing recipocation #############################
 ##################################################################
-            
+
             S = 4 # Upload slots
             request_bwd_history = {}
             chosen = []
@@ -140,9 +137,9 @@ class PiratesStd(Peer):
                     if download.from_id in request_bwd_history:
                         request_bwd_history[download.from_id] += download.blocks
 
-            for i in range(0, S - 2):
+            for i in range(0, S - 1):
                 if len(request_bwd_history) > 0:
-                    peer_id = min(request_bwd_history, key = request_bwd_history.get)
+                    peer_id = max(request_bwd_history, key = request_bwd_history.get)
                     request_bwd_history.pop(peer_id)
                     chosen.append(peer_id)
                 #if len(request_bwd_history) == 0:
@@ -150,24 +147,24 @@ class PiratesStd(Peer):
 
 ################################################################
 
-
-
 ################################################################
 ########## Implementing optimistic unchocking ##################
 ################################################################
 
-            if round % 3 == 0:
-                peers_tmp = peers
+            #print peers
+            if round % 3 == 0
+                id_list = []
+                for peer_info in peers:
+                    id_list.append(peer_info.id)
                 for peer_id in chosen:
-                    del peers_tmp[PeerInfo(id=peer_id)]
-                if len(peers_tmp) > 0:
-                    new_opt_unchoke = random.choice(peers_tmp.keys()).id
+                    id_list.remove(peer_id)
+                if len(id_list) > 0:
+                    new_opt_unchoke = random.choice(id_list)
                     chosen.append(new_opt_unchoke)
                     self.current_opt_unchoke = new_opt_unchoke
-                    print "New optimistic unchoking" + new_opt_unchoke
+                    #print "New optimistic unchoking" + new_opt_unchoke
             else:
-                chosen.append(self.current_opt_unchoke)     
-
+                chosen.append(self.current_opt_unchoke) 
 
 #############################################################
 
@@ -184,3 +181,9 @@ class PiratesStd(Peer):
                    for (peer_id, bw) in zip(chosen, bws)]
             
         return uploads
+
+
+
+
+
+        
